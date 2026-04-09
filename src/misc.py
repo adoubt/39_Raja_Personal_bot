@@ -15,6 +15,10 @@ PHOTO4 = "content/photo4.jpg"
 PHOTO5 = "content/photo5.jpg"
 PHOTO6 = "content/photo6.jpg"
 
+INACTIVE_BAN_THRESHOLD_SECONDS = 60
+BANNED_NOTIFY_THRESHOLD_SECONDS = 25
+USER_MANAGEMENT_LOOP_INTERVAL_SECONDS = 10
+
 bot_id = BOT_TOKEN.split(":",1)[0]
 bot = Bot(BOT_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())

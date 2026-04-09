@@ -26,6 +26,10 @@ class UsersDatabase:
                                                         today_left INTEGER DEFAULT 20,
                                                         update_limit TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                                                         is_admin INTEGER DEFAULT 0,
+                                                        is_activated INTEGER DEFAULT 0,
+                                                        last_code_used INTEGER DEFAULT NULL,
+                                                        last_activity_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                                        last_block_notify_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                                                         watched_videos INTEGER DEFAULT 0,
                                                         queue INTEGER DEFAULT 1,
                                                         is_member INTEGER DEFAULT 0,
@@ -225,3 +229,12 @@ class UsersDatabase:
     @classmethod
     async def is_banned(cls, user_id: int) -> bool:
         return (await cls.get_value(user_id, "is_banned")) == 1
+
+    @classmethod
+    async def update_last_activity(cls, user_id: int):
+        async with aiosqlite.connect("src/databases/users.db") as db:
+            await db.execute(
+                "UPDATE users SET last_activity_at = CURRENT_TIMESTAMP WHERE user_id = ?",
+                (user_id,)
+            )
+            await db.commit()

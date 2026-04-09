@@ -3,6 +3,7 @@ from loguru import logger
 
 from src.handlers import user_handler
 from src.methods.database.init_db import init_databases
+from src.methods.user_management_service import user_management_loop
 from src.misc import bot, dp
 # from src.methods.payment import payment_checker
 
@@ -28,6 +29,7 @@ async def main():
     # Запускаем все задачи параллельно
     await asyncio.gather(
         dp.start_polling(bot),  # Telegram-бот
+        user_management_loop(),  # Управление пользователями
         
         # cp.start_polling(), # CryptoPay
         # aaio_polling_task      # Закомментировано для исключения третьего потока

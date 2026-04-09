@@ -11,6 +11,8 @@ from src.methods.database.ads_manager import AdsDatabase
 from loguru import logger
 from typing import Union, List
 from time import time
+from datetime import datetime
+from src.locales.es import LOCALES
 from src.misc import bot, PHOTO1, PHOTO2, PHOTO3, PHOTO4, PHOTO5, PHOTO6
 PHOTO_PATHS = {
     "photo1": PHOTO1,
@@ -51,6 +53,18 @@ def parse_callback_data(data: str) -> dict:
     """Удаляем префикс и парсим параметры"""
     query_string = data.split(':', 1)[1]
     return dict(urllib.parse.parse_qsl(query_string))
+
+async def parse_int_arg(message: Message, args: list[str], index: int = 1, usage: str | None = None):
+    if len(args) <= index:
+        if usage:
+            await message.answer(usage)
+        return None
+    try:
+        return int(args[index])
+    except (ValueError, TypeError):
+        await message.answer("ID должен быть числом.")
+        return None
+
 
 def is_valid_email(email):
     """Определение шаблона для валидации email-адреса"""
@@ -228,3 +242,14 @@ async def init_content_handler(message: Message):
         await ConfigDatabase.set_value(key, file_id)
 
     await message.answer("content initialized")
+
+
+async def ban_user(user_id: int):
+    """Банит пользователя, отправляет уведомление и обновляет last_block_notify_at."""
+    await UsersDatabase.ban(user_id)
+    await UsersDatabase.set_value(user_id, 'last_block_notify_at', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    try:
+        await bot.send_message(user_id, LOCALES["blocked"], parse_mode="HTML")
+    except Exception as e:
+        logger.warning(f"Failed to notify user {user_id}: {e}")
+    logger.info(f"User {user_id} banned")

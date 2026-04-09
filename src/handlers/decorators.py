@@ -1,7 +1,7 @@
 from src.methods.database.users_manager import UsersDatabase
 from aiogram.types import Message, CallbackQuery
 from functools import wraps
-
+from src.locales.es import LOCALES
 from loguru import logger
 from src.misc import bot, bot_id
 # from src.methods.utils import  is_user_subscribed
@@ -75,7 +75,7 @@ def is_admin(function):
         user_id = message.from_user.id
         if await UsersDatabase.is_admin(user_id) or user_id == int(bot_id):
             return await function(*args, **kwargs)
-        # await message.answer('You don\'t have admin rights')
+        await message.answer('You don\'t have admin rights')
         return
 
     return _is_admin
@@ -89,9 +89,23 @@ def is_not_banned(function):
         user_id = event.from_user.id
 
         if await UsersDatabase.is_banned(user_id):
-            await event.answer("<b>Вы заблокированы, напишите пожалуйста в чат с Робертом для разблокировки.</b>",parse_mode="HTML")
+            await event.answer(LOCALES["blocked"], parse_mode="HTML")
             return
 
         return await function(event, **kwargs)
+
+    return wrapper
+
+
+def track_activity(function):
+    @wraps(function)
+    async def wrapper(*args, **kwargs):
+        event = args[0]
+        if isinstance(event, CallbackQuery):
+            user_id = event.from_user.id
+        else:  # Message
+            user_id = event.from_user.id
+        await UsersDatabase.update_last_activity(user_id)
+        return await function(*args, **kwargs)
 
     return wrapper
