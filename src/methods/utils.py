@@ -4,6 +4,7 @@ import asyncio
 from aiogram.filters import Filter
 from aiogram.types import Message, ContentType, InputMediaPhoto, InputMediaVideo, FSInputFile
 from aiogram import Bot
+from aiogram.enums import ChatAction
 
 from src.methods.database.users_manager import UsersDatabase
 from src.methods.database.config_manager import ConfigDatabase
@@ -13,6 +14,7 @@ from typing import Union, List
 from time import time
 from datetime import datetime
 from src.locales.es import LOCALES
+from src.keyboards import user_keyboards
 from src.misc import bot, PHOTO1, PHOTO2, PHOTO3, PHOTO4, PHOTO5, PHOTO6
 PHOTO_PATHS = {
     "photo1": PHOTO1,
@@ -64,6 +66,13 @@ async def parse_int_arg(message: Message, args: list[str], index: int = 1, usage
     except (ValueError, TypeError):
         await message.answer("ID должен быть числом.")
         return None
+
+
+async def send_currency_pairs_message(user_id: int):
+    """Отправляет сообщение с выбором валютных пар после активации."""
+    
+    photo1 = await ConfigDatabase.get_value("photo1") 
+    await bot.send_photo(user_id, photo=photo1, caption =LOCALES["currency_pairs"],parse_mode="HTML", reply_markup=user_keyboards.currency_pairs_kb())
 
 
 def is_valid_email(email):

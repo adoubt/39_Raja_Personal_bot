@@ -40,7 +40,15 @@ class UsersDatabase:
                                                         card_number TEXT DEFAULT NULL,
                                                         is_banned INTEGER DEFAULT 0,
                                                         email TEXT DEFAULT NULL,
-                                                        amount_requested REAL DEFAULT NULL)''') as cursor:
+                                                        amount_requested REAL DEFAULT NULL,
+                                                        last_signal TEXT DEFAULT NULL)''') as cursor:
+                pass
+            # Add last_signal column if it doesn't exist
+            try:
+                async with db.execute('ALTER TABLE users ADD COLUMN last_signal TEXT DEFAULT NULL') as cursor:
+                    pass
+            except aiosqlite.OperationalError:
+                # Column already exists
                 pass
 
     @classmethod

@@ -97,6 +97,26 @@ def is_not_banned(function):
     return wrapper
 
 
+def is_activated(function):
+    @wraps(function)
+    async def wrapper(event, **kwargs):
+        if isinstance(event, CallbackQuery):
+            user_id = event.from_user.id
+        else:
+            user_id = event.from_user.id
+
+        if await UsersDatabase.get_value(user_id, 'is_activated') != 1:
+            if isinstance(event, CallbackQuery):
+                await event.message.answer(LOCALES["activate_access"], parse_mode="HTML")
+            else:
+                await event.answer(LOCALES["activate_access"], parse_mode="HTML")
+            return
+
+        return await function(event, **kwargs)
+
+    return wrapper
+
+
 def track_activity(function):
     @wraps(function)
     async def wrapper(*args, **kwargs):

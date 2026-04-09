@@ -12,6 +12,8 @@ async def init_databases() -> None:
     await AdsDatabase.create_table()
     if await ConfigDatabase.get_value('ad_state') is None:
         await ConfigDatabase.set_value('ad_state','test')
+    if await ConfigDatabase.get_value('inactive_ban_count') is None:
+        await ConfigDatabase.set_value('inactive_ban_count', 0)
     
 # # Пример вызова
 # if __name__ == '__main__':

@@ -14,12 +14,14 @@ Monthly performance typically ranges from 67% to 82% accuracy, and losing trades
 @Raja_Personal_bot""",
 
 
-    "activated successfully":"""<i>[Your access has been successfully activated ✅
-Your account has been successfully linked to Pocket Option ✅]</i>""",
+    "activated successfully":"""<i>Your access has been successfully activated ✅
+Your account has been successfully linked to Pocket Option ✅</i>""",
     "blocked": """🚨<b>Attention</b>🚨
 
-❌ @Raja_Personal_bot has blocked your access. To restore it, contact me in <a href="https://t.me/Raja_Personal_bot">chat</a> ❌""",
-
+❌ @Raja_Personal_bot has blocked your access. To restore it, contact me in  <a href="https://t.me/Raja_Personal_bot">chat</a> ❌""",
+    "currency_pairs": """<b>To receive a signal, you need to select a currency pair</b>""",
+    "after_signal": """<u>10 seconds to enter the trade have passed!</u>
+If you have not entered the trade, it is better to request a new signal""",
     "set_admin_empty": """❌ Empty request.
 Example: `/set_admin durov`
 !Username must be registered here!""",

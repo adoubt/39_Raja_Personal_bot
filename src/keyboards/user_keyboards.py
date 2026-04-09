@@ -28,7 +28,7 @@ def get_start_kb(requested:int) -> ReplyKeyboardMarkup:
 def get_admin_kb() -> ReplyKeyboardMarkup:
     buttons = [
         [KeyboardButton(text='/send_post'), KeyboardButton(text='/mode'), KeyboardButton(text='/redakt_post')],
-        [KeyboardButton(text='/stats')], 
+        [KeyboardButton(text='/stat')], 
         [KeyboardButton(text='/admin'), KeyboardButton(text='/start')] ]
     
     return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
@@ -94,19 +94,40 @@ def get_channel_kb(link:str) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text='Canal',url=link)]])
     return ikb
 
-def get_withdraw_kb() -> InlineKeyboardMarkup:
-    ikb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Únase al canal", url=CHANNEL_LINK)],
-        [InlineKeyboardButton(text="comprobar las incripciones", callback_data="verify_member")]
-        ])
-    return ikb
 
 def get_process_kb() -> InlineKeyboardMarkup:
     ikb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text='salir ↩️', callback_data="exit")]
         ])
     return ikb
-
+def currency_pairs_kb() -> InlineKeyboardMarkup:
+    ikb = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text='EUR/USD', callback_data='pair_EURUSD'),
+            InlineKeyboardButton(text='GBP/USD', callback_data='pair_GBPUSD')
+        ],
+        [
+            InlineKeyboardButton(text='USD/JPY', callback_data='pair_USDJPY'),
+            InlineKeyboardButton(text='AUD/USD', callback_data='pair_AUDUSD')
+        ],
+        [
+            InlineKeyboardButton(text='USD/CAD', callback_data='pair_USDCAD'),
+            InlineKeyboardButton(text='EUR/GBP', callback_data='pair_EURGBP')
+        ],
+        [
+            InlineKeyboardButton(text='EUR/JPY', callback_data='pair_EURJPY'),
+            InlineKeyboardButton(text='GBP/JPY', callback_data='pair_GBPJPY')
+        ],
+        [
+            InlineKeyboardButton(text='USD/CHF', callback_data='pair_USDCHF')
+        ]
+    ])
+    return ikb
+def after_signal_kb() -> InlineKeyboardMarkup:
+    ikb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Get a new signal!", callback_data="return_to_pairs")]
+    ])
+    return ikb
 def get_receive_kb() -> InlineKeyboardMarkup:
     ikb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="💰 Ganar aún más dinero 💰", callback_data ='earn_more')]])
@@ -115,4 +136,18 @@ def get_receive_kb() -> InlineKeyboardMarkup:
 def get_back_to_admin_kb() -> InlineKeyboardMarkup:
     ikb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Вернуться в админку", callback_data ='back_to_admin')]])
+    return ikb
+
+def get_chart_kb(pair_code: str) -> InlineKeyboardMarkup:
+    ikb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Chart is ready", callback_data=f"chart_ready:{pair_code}")],
+        [InlineKeyboardButton(text="Back to currency pairs 🔙", callback_data="return_to_pairs")]
+    ])
+    return ikb
+
+def get_ready_kb(pair_code: str) -> InlineKeyboardMarkup:
+    ikb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Ready", callback_data=f"ready:{pair_code}")],
+        [InlineKeyboardButton(text="Back to currency pairs 🔙", callback_data="return_to_pairs")]
+    ])
     return ikb

@@ -2,6 +2,7 @@ import asyncio
 from datetime import datetime, timedelta
 from loguru import logger
 from src.methods.database.users_manager import UsersDatabase
+from src.methods.database.config_manager import ConfigDatabase
 from src.methods.utils import ban_user
 from src.misc import (
     INACTIVE_BAN_THRESHOLD_SECONDS,
@@ -33,6 +34,9 @@ async def ban_inactive_users():
                 blocked_count += 1
 
     if blocked_count > 0:
+        # Update the inactive ban count in config
+        current_count = await ConfigDatabase.get_value('inactive_ban_count') or 0
+        await ConfigDatabase.set_value('inactive_ban_count', current_count + blocked_count)
         logger.info(f"Inactive ban: blocked {blocked_count} users")
 
 

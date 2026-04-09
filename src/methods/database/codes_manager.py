@@ -54,6 +54,12 @@ class CodesDatabase:
             await db.commit()
 
     @classmethod
+    async def get_all_codes(cls):
+        async with aiosqlite.connect(DB_PATH) as db:
+            async with db.execute('SELECT code, applied_count FROM codes') as cursor:
+                return await cursor.fetchall()
+
+    @classmethod
     async def get_code_id_by_code(cls, code: str):
         async with aiosqlite.connect(DB_PATH) as db:
             async with db.execute(

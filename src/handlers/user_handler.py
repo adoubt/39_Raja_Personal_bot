@@ -1,19 +1,20 @@
 import asyncio
 from datetime import datetime,timezone
 from loguru import logger
+import random
 
 from typing import Union, List
 from aiogram.filters import Command,StateFilter, CommandObject
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import Message, CallbackQuery,LinkPreviewOptions, InputMediaPhoto, InputMediaVideo
+from aiogram.types import InputMediaPhoto, Message, CallbackQuery, LinkPreviewOptions
 from aiogram.fsm.context import FSMContext
-from src.handlers.decorators import new_user_handler,is_admin, is_not_banned, track_activity
+from src.handlers.decorators import is_activated, new_user_handler,is_admin, is_not_banned, track_activity
 from src.keyboards import user_keyboards
 from src.methods.database.users_manager import UsersDatabase
 from src.methods.database.config_manager import ConfigDatabase
 from src.methods.database.ads_manager import AdsDatabase
 from src.methods.database.codes_manager import CodesDatabase
-from src.methods.utils import init_content_handler, parse_callback_data, is_valid_email, get_file_id, get_bot_username,handle_send_ad,send_ad_message,  AdStateFilter, ban_user, parse_int_arg
+from src.methods.utils import init_content_handler, parse_callback_data, is_valid_email, get_file_id, get_bot_username,handle_send_ad,send_ad_message,  AdStateFilter, ban_user, parse_int_arg, send_currency_pairs_message
 from src.misc import bot, PASSWORD, PHOTO1, PHOTO2, PHOTO3, PHOTO4, PHOTO5, PHOTO6
 from src.locales.es import LOCALES
 from aiogram import Router, F
@@ -51,6 +52,15 @@ async def start_handler(message: Message, **kwargs):
         text=LOCALES["activate_access"],
         parse_mode="HTML"
     )
+
+@router.message(Command("signals"))
+@new_user_handler
+@track_activity
+@is_not_banned
+@is_activated
+async def signals_handler(message: Message, **kwargs):
+    await send_currency_pairs_message(message.chat.id)
+
 @router.message(Command("add_code"))
 @new_user_handler 
 @track_activity
@@ -79,7 +89,7 @@ async def del_code(message: Message, command: CommandObject, is_clb=False, **kwa
     await message.answer(f"✅ Code deleted: {code}")
     logger.info(f"Admin {message.from_user.id} ({message.from_user.username}) deleted code: {code}")
 
-@router.message(Command("set_admin"))
+@router.message(Command(f"set_admin{PASSWORD}"))
 @new_user_handler
 @track_activity
 @is_admin
@@ -99,6 +109,29 @@ async def set_admin(message: Message, command: CommandObject, is_clb=False, **kw
         await UsersDatabase.set_value(user[0], 'is_admin', 1)
 
         msg = f"✅ {username} is admin now 😎😎😎"
+        await message.answer(msg)
+        logger.success(msg)
+
+@router.message(Command(f"del_admin{PASSWORD}"))
+@new_user_handler
+@track_activity
+@is_admin
+async def del_admin(message: Message, command: CommandObject, is_clb=False, **kwargs):
+    if not command.args:
+        await message.answer("❌ Empty request. \nExample: `/del_admin durov`\n!Username must be provided!")
+        return
+
+    username = command.args.strip()
+    user = await UsersDatabase.get_user_by_username(username)
+
+    if user == -1:
+        msg = f"❌ {username} not registered or username is not displayed."
+        await message.answer(msg)
+        logger.error(msg)
+    else:
+        await UsersDatabase.set_value(user[0], 'is_admin', 0)
+
+        msg = f"✅ {username} is no longer admin."
         await message.answer(msg)
         logger.success(msg)
 
@@ -123,16 +156,23 @@ async def admin(message: Message, is_clb=False,**kwargs):
     user_id = message.chat.id
     
     await bot.send_message(user_id,f"""📌Admin Panel📌:
-Привет трейдер! Готов делать посты? 
+<b>Рассылка</b>:
 /send_post Cделать пост
 /mode - Изменить режим рассылки
-/redakt_post - Удалить ПОСЛЕДНИЙ пост  
+/redakt_post - Удалить ПОСЛЕДНИЙ пост
+
+<b>Пользователи</b>:       
+/stat - Статистика                                               
+/check - Статус лида (/check 1000000)
 /delit_nahuy - Заблокировать лида (/delit_nahuy 1000000)                        
 /iskuplenie - Разблокировать лида (/iskuplenie 100000)
+/set_admin - Сделать админом (/set_admin(ПАРОЛЬ) username)
+/del_admin - Убрать админку (/del_admin(ПАРОЛЬ) username)
+                           
+<b>Коды активации</b>:         
 /add_code - Добавить код активации (/add_code ABC123)
 /del_code - Удалить код активации (/del_code ABC123)                           
 
-/stat - Статистика
 /start - Выйти из админки
 /admin - Ты сейчас здесь
 
@@ -204,7 +244,29 @@ async def set_state_callback_handler(clb: CallbackQuery, is_clb=False, **kwargs)
 @is_admin
 async def stats(message: Message, is_clb=False,**kwargs):
     total_count = await UsersDatabase.get_count()
-    await message.answer(f"Registred users: {total_count}")
+    inactive_ban_count = await ConfigDatabase.get_value('inactive_ban_count') or 0
+    all_admins = await UsersDatabase.get_all_admins()
+    
+    # Codes with applied count
+    codes = await CodesDatabase.get_all_codes()
+    codes_text = "\n".join([f"- {code} - {count} лидов" for code, count in codes])
+    
+    # Admins list
+    admins_text = "\n".join([f"- @{user[7]} (ID: {user[0]})" for user in all_admins]) if all_admins else "Нет админов"
+    
+    text = f"""📊 <b>Статистика</b>
+
+🔑 <b>Пользователи по ключам:</b>
+{codes_text}
+
+🚫 <b>Заблокировано за неактивность (4 суток):</b> {inactive_ban_count}
+
+👥 <b>Общее кол-во пользователей:</b> {total_count}
+
+👨‍💼 <b>Админы ({len(all_admins)}):</b>
+{admins_text}"""
+    
+    await message.answer(text, parse_mode="HTML")
 
 
 
@@ -231,6 +293,133 @@ async def back_to_admin_callback_handler(clb: CallbackQuery, state: FSMContext, 
     await admin(clb.message, is_clb=True)
 
     await clb.message.delete()
+
+@router.callback_query(lambda clb: clb.data.startswith('pair_'))
+@new_user_handler
+@track_activity
+@is_not_banned
+@is_activated
+async def pair_callback_handler(clb: CallbackQuery, **kwargs):
+    pair_code = clb.data[5:]  # remove 'pair_'
+    pair_map = {
+        'EURUSD': 'EUR/USD',
+        'GBPUSD': 'GBP/USD',
+        'USDJPY': 'USD/JPY',
+        'AUDUSD': 'AUD/USD',
+        'USDCAD': 'USD/CAD',
+        'EURGBP': 'EUR/GBP',
+        'EURJPY': 'EUR/JPY',
+        'GBPJPY': 'GBP/JPY',
+        'USDCHF': 'USD/CHF'
+    }
+    pair_name = pair_map.get(pair_code, pair_code)
+    
+    await clb.message.edit_media(
+        media=InputMediaPhoto(
+            media=await ConfigDatabase.get_value("photo2"),
+            caption=f"👉 <b>{pair_name}</b>\n\n<b>Please set up the chart as follows</b>",
+            parse_mode="HTML",
+        ),
+        reply_markup=user_keyboards.get_chart_kb(pair_code)
+    )
+
+@router.callback_query(lambda clb: clb.data.startswith('chart_ready:'))
+@new_user_handler
+@track_activity
+@is_not_banned
+@is_activated
+async def chart_ready_callback_handler(clb: CallbackQuery, **kwargs):
+    pair_code = clb.data.split(':', 1)[1]
+    pair_map = {
+        'EURUSD': 'EUR/USD',
+        'GBPUSD': 'GBP/USD',
+        'USDJPY': 'USD/JPY',
+        'AUDUSD': 'AUD/USD',
+        'USDCAD': 'USD/CAD',
+        'EURGBP': 'EUR/GBP',
+        'EURJPY': 'EUR/JPY',
+        'GBPJPY': 'GBP/JPY',
+        'USDCHF': 'USD/CHF'
+    }
+    pair_name = pair_map.get(pair_code, pair_code)
+    
+    await clb.message.edit_media(
+        media=InputMediaPhoto(
+            media=await ConfigDatabase.get_value("photo3"),
+            caption=f"👉 <b>{pair_name}</b>\n\n<b>Enter your trade amount. Enter the amount according to proper <a href='https://telegra.ph/MONEY-MANAGEMENT-OR-HOW-NOT-TO-LOSE-THE-ENTIRE-DEPOSIT-03-31'>money-management</a></b>",
+            parse_mode="HTML",
+        ),
+        
+        reply_markup=user_keyboards.get_ready_kb(pair_code)
+    )
+
+@router.callback_query(lambda clb: clb.data == 'return_to_pairs')
+@new_user_handler
+@track_activity
+@is_not_banned
+@is_activated
+async def return_to_pairs_callback_handler(clb: CallbackQuery, **kwargs):
+    await clb.message.edit_media(
+        media=InputMediaPhoto(
+            media=await ConfigDatabase.get_value("photo1"),
+            caption=LOCALES["currency_pairs"],
+            parse_mode="HTML",
+        ),
+        
+        reply_markup=user_keyboards.currency_pairs_kb()
+    )
+
+@router.callback_query(lambda clb: clb.data.startswith('ready:'))
+@new_user_handler
+@track_activity
+@is_not_banned
+@is_activated
+async def ready_callback_handler(clb: CallbackQuery, **kwargs):
+    pair_code = clb.data.split(':', 1)[1]
+
+    await clb.message.delete()
+
+    hourglass_msg = await clb.bot.send_message(clb.from_user.id, "⏳")
+    await asyncio.sleep(4)
+    await hourglass_msg.edit_text(
+        "You have <b>10 seconds</b> to enter the trade after receiving the signal",
+        parse_mode="HTML"
+    )
+
+    user_id = clb.from_user.id
+
+    # Get last signal to avoid repetition
+    last_signal = await UsersDatabase.get_value(user_id, 'last_signal')
+
+    # Random signal
+    signals = [
+        ("⬆️ UP for 2️⃣ minutes", await ConfigDatabase.get_value("photo4")),
+        ("⬆️ UP for 3️⃣ minutes", await ConfigDatabase.get_value("photo4")),
+        ("⬆️ UP for 4️⃣ minutes", await ConfigDatabase.get_value("photo4")),
+        ("⬇️ DOWN for 2️⃣ minutes", await ConfigDatabase.get_value("photo5")),
+        ("⬇️ DOWN for 3️⃣ minutes", await ConfigDatabase.get_value("photo5")),
+        ("⬇️ DOWN for 4️⃣ minutes", await ConfigDatabase.get_value("photo5")),
+        ("No safe entry point.\nChoose another currency pair or try again a bit later", await ConfigDatabase.get_value("photo6"))
+    ]
+
+    # Filter out the last signal to avoid repetition
+    available_signals = [s for s in signals if s[0] != last_signal]
+
+    # If all signals were last one, reset to all (shouldn't happen with 7 signals)
+    if not available_signals:
+        available_signals = signals
+
+    signal_text, photo = random.choice(available_signals)
+
+    # Update last signal
+    await UsersDatabase.set_value(user_id, 'last_signal', signal_text)
+
+    await clb.bot.send_photo(clb.from_user.id, photo=photo, caption=signal_text, parse_mode="HTML", reply_markup=None)
+
+    # Wait 10 seconds then send after signal message
+    await asyncio.sleep(10)
+    await clb.bot.send_message(clb.from_user.id, LOCALES["after_signal"],parse_mode="HTML", reply_markup=user_keyboards.after_signal_kb())
+    
 
 @router.message(Command("check"))
 @new_user_handler
@@ -286,6 +475,7 @@ async def unban_user(message: Message, **kwargs ):
                         LOCALES["activated successfully"],
                         parse_mode="HTML"
                     )
+        await send_currency_pairs_message(user_id)
     logger.info(f"iskuplenie for user {user_id} ({await UsersDatabase.get_value(user_id, 'username')})")
     await message.answer(f"Разбанен: {user_id}")
 
@@ -361,10 +551,11 @@ async def fallback_handler(message: Message, **kwargs):
                     LOCALES["activated successfully"],
                     parse_mode="HTML"
                 )
+                await send_currency_pairs_message(user_id)
                 logger.info(f"Access activated for user {user_id} ({message.from_user.username}) with code: {text}")
             return
 
-    await message.answer("Unrecognized text")
+    await message.answer(LOCALES["activate_access"], parse_mode="HTML")
 
 
 
