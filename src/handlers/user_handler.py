@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime,timezone
 from loguru import logger
-from aiogram import Router, F
+
 from typing import Union, List
 from aiogram.filters import Command,StateFilter, CommandObject
 from aiogram.fsm.state import StatesGroup, State
@@ -12,60 +12,22 @@ from src.keyboards import user_keyboards
 from src.methods.database.users_manager import UsersDatabase
 from src.methods.database.config_manager import ConfigDatabase
 from src.methods.database.ads_manager import AdsDatabase
-from src.methods.utils import get_or_set_photo_id, parse_callback_data, is_valid_email, get_file_id, get_bot_username,handle_send_ad,send_ad_message,  AdStateFilter
-from src.misc import bot, START_MESSAGE_PHOTO,START_MESSAGE_PHOTO2, CHANNEL_LINK, CHANNEL_ID,LOG_CHANNEL_LINK, LOG_CHANNEL_ID,PASSWORD
+from src.methods.utils import init_content_handler, parse_callback_data, is_valid_email, get_file_id, get_bot_username,handle_send_ad,send_ad_message,  AdStateFilter
+from src.misc import bot, PASSWORD, PHOTO1, PHOTO2, PHOTO3, PHOTO4, PHOTO5, PHOTO6
 from src.locales.es import LOCALES
+from aiogram import Router, F
 router =  Router()
 
 
 
+@router.message(Command("init_content"))
+async def init_content(message: Message):
+    await init_content_handler(message)
+
 @router.message(Command("start"))
-@new_user_handler
-@is_not_banned
-async def start_handler(message: Message, is_clb=False, **kwargs):
-    kb = user_keyboards.remove()
-
-    photo_id_1 = await get_or_set_photo_id(
-        "start_message_photo_id",
-        START_MESSAGE_PHOTO,
-        message
-    )
-
-    await message.answer_photo(
-        photo=photo_id_1,
-        caption=LOCALES["start"],
-        parse_mode="HTML",
-        reply_markup=kb
-    )
-
-    await asyncio.sleep(20)
-
-    photo_id_2 = await get_or_set_photo_id(
-        "start_message_photo_id_2",
-        START_MESSAGE_PHOTO2,
-        message
-    )
-
-    await message.answer_photo(
-        photo=photo_id_2,
-        caption=LOCALES["start2"],
-        parse_mode="HTML"
-    )
-    await asyncio.sleep(10)
-
-    msg = await message.answer(
-
-    text=LOCALES["start3"],
-    parse_mode="HTML"
-    )
-    await asyncio.sleep(2)
-    await bot.pin_chat_message(
-        chat_id=message.chat.id,
-        message_id=msg.message_id,
-        disable_notification=True
-    )
-
-    
+async def start_handler(message: Message):
+    print("message received:", message.text)
+    await message.answer("1")    
 @router.message(Command("set_admin"))
 @is_admin
 async def set_admin(message: Message, command: CommandObject, is_clb=False, **kwargs):
@@ -274,13 +236,13 @@ async def handle_post(message: Message, state: FSMContext, **kwargs):
 #     if message:
 #         asyncio.create_task(handle_send_ad(message, user_id))
 
-@router.message()
-@new_user_handler
-@is_not_banned
-async def fallback_handler(message: Message, **kwargs):
-    if getattr(message, "pinned_message", None):
-        return
-    await message.answer("<b>Нераспознанный текст, этот бот не ведет с Вами общение. Он анализирует рынок и предоставляет сигналы в режиме реального времени.</b>",parse_mode="HTML")
+# @router.message()
+# @new_user_handler
+# @is_not_banned
+# async def fallback_handler(message: Message, **kwargs):
+#     if getattr(message, "pinned_message", None):
+#         return
+#     await message.answer("<b>Нераспознанный текст, этот бот не ведет с Вами общение. Он анализирует рынок и предоставляет сигналы в режиме реального времени.</b>",parse_mode="HTML")
 
 
 

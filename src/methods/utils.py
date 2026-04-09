@@ -2,15 +2,25 @@ import urllib.parse
 import re
 import asyncio
 from aiogram.filters import Filter
-from aiogram.types import Message, ContentType, InputMediaPhoto, InputMediaVideo
+from aiogram.types import Message, ContentType, InputMediaPhoto, InputMediaVideo, FSInputFile
 from aiogram import Bot
-from src.misc import bot,CHANNEL_ID,LOG_CHANNEL_LINK, LOG_CHANNEL_ID
+
 from src.methods.database.users_manager import UsersDatabase
 from src.methods.database.config_manager import ConfigDatabase
 from src.methods.database.ads_manager import AdsDatabase
 from loguru import logger
 from typing import Union, List
 from time import time
+from src.misc import bot, PHOTO1, PHOTO2, PHOTO3, PHOTO4, PHOTO5, PHOTO6
+PHOTO_PATHS = {
+    "photo1": PHOTO1,
+    "photo2": PHOTO2,
+    "photo3": PHOTO3,
+    "photo4": PHOTO4,
+    "photo5": PHOTO5,
+    "photo6": PHOTO6,
+}
+
 async def get_or_set_photo_id(key: str, file_path: str, message: Message):
     photo_id = await ConfigDatabase.get_value(key)
 
@@ -52,13 +62,13 @@ def is_valid_email(email):
 
 
 
-async def is_user_subscribed(user_id: int, **kwargs):
+# async def is_user_subscribed(user_id: int, **kwargs):
 
-    member = await bot.get_chat_member(int(CHANNEL_ID), user_id)
-    if member.status in ["member", "creator", "administrator"]:
-        return True
-    else:
-        return False
+#     member = await bot.get_chat_member(int(CHANNEL_ID), user_id)
+#     if member.status in ["member", "creator", "administrator"]:
+#         return True
+#     else:
+#         return False
     
 
 async def get_bot_username(bot: Bot):
@@ -206,15 +216,15 @@ async def handle_send_ad(content, admin: int):
         "Чтобы удалить рассылку используй /redakt_post"
     )
     message.answer(msg)
-    if LOG_CHANNEL_ID:
-        try:
-            await bot.send_message(
-                int(LOG_CHANNEL_ID),
-                msg,
-                parse_mode="HTML",
-                disable_notification=True
-            )
-        except Exception as e:
-            logger.warning(f"LOG_CHANNEL_ID error: {e}")
 
     logger.success(msg)
+
+
+async def init_content_handler(message: Message):
+    for key, path in PHOTO_PATHS.items():
+        msg = await message.answer_photo(photo=FSInputFile(path))
+        
+        file_id = msg.photo[-1].file_id
+        await ConfigDatabase.set_value(key, file_id)
+
+    await message.answer("content initialized")

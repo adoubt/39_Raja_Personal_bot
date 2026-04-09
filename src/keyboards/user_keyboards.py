@@ -1,6 +1,6 @@
 from aiogram.types import KeyboardButton, ReplyKeyboardRemove, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
 from typing import Any
-from src.misc import CHANNEL_LINK
+
 
 
 def get_subscription_kb(link) -> InlineKeyboardMarkup:

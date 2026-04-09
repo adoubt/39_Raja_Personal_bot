@@ -3,8 +3,8 @@ from aiogram.types import Message, CallbackQuery
 from functools import wraps
 
 from loguru import logger
-from src.misc import bot, bot_id, CHANNEL_LINK,LOG_CHANNEL_ID
-from src.methods.utils import  is_user_subscribed
+from src.misc import bot, bot_id
+# from src.methods.utils import  is_user_subscribed
 from src.keyboards import user_keyboards
 # def new_seller_handler(function):
 #     async def _new_seller_handler(*args, **kwargs):
@@ -38,15 +38,7 @@ def new_user_handler(function):
             msg = f"👤 @{username} {user_id}"
 
             # защита от None + любых ошибок отправки
-            if LOG_CHANNEL_ID:
-                try:
-                    await bot.send_message(
-                        int(LOG_CHANNEL_ID),
-                        text=msg,
-                        disable_notification=True
-                    )
-                except Exception as e:
-                    logger.warning(f"LOG_CHANNEL_ID error: {e}")
+            
 
             logger.success(f"Новый пользователь (ID: {user_id} username {username})")
 
@@ -59,23 +51,23 @@ def new_user_handler(function):
     return _new_user_handler
 
 
-def pursue_subscription(function):
-    async def _pursue_subscription(*args, **kwargs):
-        msg = args[0]
-        if msg is None:
-            return
+# def pursue_subscription(function):
+#     async def _pursue_subscription(*args, **kwargs):
+#         msg = args[0]
+#         if msg is None:
+#             return
 
-        if (await is_user_subscribed(msg.from_user.id)) or (
-                type(msg) is CallbackQuery and (await is_user_subscribed(msg.message.from_user.id))):
-            return await function(*args, **kwargs)
-        msg_text = f'Для использования бота необходимо подписаться на канал.\n<a href="{CHANNEL_LINK}">Подписаться (кликабельно)</a>'
+#         if (await is_user_subscribed(msg.from_user.id)) or (
+#                 type(msg) is CallbackQuery and (await is_user_subscribed(msg.message.from_user.id))):
+#             return await function(*args, **kwargs)
+#         msg_text = f'Для использования бота необходимо подписаться на канал.\n<a href="{CHANNEL_LINK}">Подписаться (кликабельно)</a>'
        
         
 
-        await msg.answer(text=msg_text, parse_mode ="HTML",reply_markup=user_keyboards.get_subscription_kb(CHANNEL_LINK))
-        return
+#         await msg.answer(text=msg_text, parse_mode ="HTML",reply_markup=user_keyboards.get_subscription_kb(CHANNEL_LINK))
+#         return
 
-    return _pursue_subscription
+#     return _pursue_subscription
 
 def is_admin(function):
     async def _is_admin(*args, **kwargs):
