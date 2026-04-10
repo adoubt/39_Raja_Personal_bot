@@ -123,9 +123,10 @@ def currency_pairs_kb() -> InlineKeyboardMarkup:
         ]
     ])
     return ikb
-def after_signal_kb() -> InlineKeyboardMarkup:
+def after_signal_kb(pair_code: str) -> InlineKeyboardMarkup:
     ikb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Get a new signal!", callback_data="return_to_pairs")]
+        [InlineKeyboardButton(text="🔙 Currency Pairs", callback_data="return_to_pairs"),
+        InlineKeyboardButton(text=f"New Signal", callback_data=f"ready:{pair_code}")]
     ])
     return ikb
 def get_receive_kb() -> InlineKeyboardMarkup:

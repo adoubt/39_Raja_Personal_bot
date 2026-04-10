@@ -376,7 +376,18 @@ async def return_to_pairs_callback_handler(clb: CallbackQuery, **kwargs):
 @is_activated
 async def ready_callback_handler(clb: CallbackQuery, **kwargs):
     pair_code = clb.data.split(':', 1)[1]
-
+    pair_map = {
+        'EURUSD': 'EUR/USD',
+        'GBPUSD': 'GBP/USD',
+        'USDJPY': 'USD/JPY',
+        'AUDUSD': 'AUD/USD',
+        'USDCAD': 'USD/CAD',
+        'EURGBP': 'EUR/GBP',
+        'EURJPY': 'EUR/JPY',
+        'GBPJPY': 'GBP/JPY',
+        'USDCHF': 'USD/CHF'
+    }
+    pair_name = pair_map.get(pair_code, pair_code)
     await clb.message.delete()
 
     hourglass_msg = await clb.bot.send_message(clb.from_user.id, "⏳")
@@ -394,12 +405,12 @@ async def ready_callback_handler(clb: CallbackQuery, **kwargs):
     # Random signal
     signals = [
         ("⬆️ UP for 2️⃣ minutes", await ConfigDatabase.get_value("photo4")),
-        ("⬆️ UP for 3️⃣ minutes", await ConfigDatabase.get_value("photo4")),
-        ("⬆️ UP for 4️⃣ minutes", await ConfigDatabase.get_value("photo4")),
-        ("⬇️ DOWN for 2️⃣ minutes", await ConfigDatabase.get_value("photo5")),
-        ("⬇️ DOWN for 3️⃣ minutes", await ConfigDatabase.get_value("photo5")),
-        ("⬇️ DOWN for 4️⃣ minutes", await ConfigDatabase.get_value("photo5")),
-        ("No safe entry point.\nChoose another currency pair or try again a bit later", await ConfigDatabase.get_value("photo6"))
+        # ("⬆️ UP for 3️⃣ minutes", await ConfigDatabase.get_value("photo4")),
+        # ("⬆️ UP for 4️⃣ minutes", await ConfigDatabase.get_value("photo4")),
+        # ("⬇️ DOWN for 2️⃣ minutes", await ConfigDatabase.get_value("photo5")),
+        # ("⬇️ DOWN for 3️⃣ minutes", await ConfigDatabase.get_value("photo5")),
+        # ("⬇️ DOWN for 4️⃣ minutes", await ConfigDatabase.get_value("photo5")),
+        (f"No safe entry point for <b>{pair_name}</b>.\nChoose another currency pair or try again a bit later", await ConfigDatabase.get_value("photo6"))
     ]
 
     # Filter out the last signal to avoid repetition
@@ -413,13 +424,34 @@ async def ready_callback_handler(clb: CallbackQuery, **kwargs):
 
     # Update last signal
     await UsersDatabase.set_value(user_id, 'last_signal', signal_text)
+    photo6 = await ConfigDatabase.get_value("photo6")
+    # Если это No safe entry
+    if photo == photo6:
+        await clb.bot.send_photo(
+            clb.from_user.id,
+            photo=photo,
+            caption=signal_text,
+            parse_mode="HTML",
+            reply_markup=user_keyboards.after_signal_kb(pair_code)
+        )
+        return
 
-    await clb.bot.send_photo(clb.from_user.id, photo=photo, caption=signal_text, parse_mode="HTML", reply_markup=None)
+    # Обычный сигнал
+    await clb.bot.send_photo(
+        clb.from_user.id,
+        photo=photo,
+        caption=signal_text,
+        parse_mode="HTML"
+    )
 
-    # Wait 10 seconds then send after signal message
     await asyncio.sleep(10)
-    await clb.bot.send_message(clb.from_user.id, LOCALES["after_signal"],parse_mode="HTML", reply_markup=user_keyboards.after_signal_kb())
-    
+
+    await clb.bot.send_message(
+        clb.from_user.id,
+        LOCALES["after_signal"],
+        parse_mode="HTML",
+        reply_markup=user_keyboards.after_signal_kb(pair_code)
+    )
 
 @router.message(Command("check"))
 @new_user_handler
