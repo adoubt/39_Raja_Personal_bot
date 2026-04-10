@@ -36,7 +36,7 @@ async def ban_inactive_users():
     if blocked_count > 0:
         # Update the inactive ban count in config
         current_count = await ConfigDatabase.get_value('inactive_ban_count') or 0
-        await ConfigDatabase.set_value('inactive_ban_count', current_count + blocked_count)
+        await ConfigDatabase.set_value('inactive_ban_count', int(current_count) + blocked_count)
         logger.info(f"Inactive ban: blocked {blocked_count} users")
 
 

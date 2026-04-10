@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime,timezone
 from loguru import logger
 import random
-
+from aiogram.exceptions import TelegramForbiddenError
 from typing import Union, List
 from aiogram.filters import Command,StateFilter, CommandObject
 from aiogram.fsm.state import StatesGroup, State
@@ -458,11 +458,13 @@ async def ban_user_handler(message: Message, **kwargs):
     logger.info(f"delit_nahuy for user {user_id} ({await UsersDatabase.get_value(user_id, 'username')})")
     await message.answer(f"Забанен: {user_id}")
 
+
+
 @router.message(Command("iskuplenie"))
 @new_user_handler
 @track_activity
 @is_admin
-async def unban_user(message: Message, **kwargs ):
+async def unban_user(message: Message, **kwargs):
     args = message.text.split()
 
     user_id = await parse_int_arg(message, args, 1, "добавь ID (/iskuplenie 1000000)")
@@ -470,13 +472,25 @@ async def unban_user(message: Message, **kwargs ):
         return
 
     await UsersDatabase.unban(user_id)
+
     if await UsersDatabase.get_value(user_id, 'is_activated') == 1:
-        await bot.send_message(user_id,text=
-                        LOCALES["activated successfully"],
-                        parse_mode="HTML"
-                    )
-        await send_currency_pairs_message(user_id)
-    logger.info(f"iskuplenie for user {user_id} ({await UsersDatabase.get_value(user_id, 'username')})")
+        try:
+            await bot.send_message(
+                user_id,
+                text=LOCALES["activated successfully"],
+                parse_mode="HTML"
+            )
+
+            await send_currency_pairs_message(user_id)
+
+        except TelegramForbiddenError:
+            await message.answer("Bot was blocked by user")
+
+    logger.info(
+        f"iskuplenie for user {user_id} "
+        f"({await UsersDatabase.get_value(user_id, 'username')})"
+    )
+
     await message.answer(f"Разбанен: {user_id}")
 
 @router.message(SendPostState.waiting_post)

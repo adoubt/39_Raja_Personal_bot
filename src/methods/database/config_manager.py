@@ -1,5 +1,5 @@
 import aiosqlite
-
+from typing import Any
 class ConfigDatabase:
     @classmethod
     async def create_table(cls):
@@ -8,7 +8,8 @@ class ConfigDatabase:
             await db.execute('''
                 CREATE TABLE IF NOT EXISTS config (
                     key TEXT PRIMARY KEY,
-                    value TEXT
+                    value TEXT,
+                    inactive_ban_count INTEGER DEFAULT 0
                 )
             ''')
             await db.commit()
@@ -22,7 +23,7 @@ class ConfigDatabase:
                 return result[0] if result else None  # Возвращает None, если ключа нет
 
     @classmethod
-    async def set_value(cls, key: str, value: str):
+    async def set_value(cls, key: str, value: Any):
         """Обновляет или вставляет значение по ключу"""
         async with aiosqlite.connect("src/databases/config.db") as db:
             await db.execute('''
