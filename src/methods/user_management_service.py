@@ -23,7 +23,7 @@ async def ban_inactive_users():
         is_banned = user[23]  # is_banned
         is_admin = user[10]  # is_admin
         last_activity_str = user[13]  # last_activity_at
-
+        is_activated = user[12]  # is_active
         if is_admin:
             continue
 

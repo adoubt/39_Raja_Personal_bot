@@ -142,13 +142,13 @@ def get_back_to_admin_kb() -> InlineKeyboardMarkup:
 def get_chart_kb(pair_code: str) -> InlineKeyboardMarkup:
     ikb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Chart is ready", callback_data=f"chart_ready:{pair_code}")],
-        [InlineKeyboardButton(text="Back to currency pairs 🔙", callback_data="return_to_pairs")]
+        [InlineKeyboardButton(text="🔙 Currency Pairs", callback_data="return_to_pairs")]
     ])
     return ikb
 
 def get_ready_kb(pair_code: str) -> InlineKeyboardMarkup:
     ikb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Ready", callback_data=f"ready:{pair_code}")],
-        [InlineKeyboardButton(text="Back to currency pairs 🔙", callback_data="return_to_pairs")]
+        [InlineKeyboardButton(text="🔙 Currency Pairs", callback_data="return_to_pairs")]
     ])
     return ikb
