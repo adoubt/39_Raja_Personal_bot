@@ -38,7 +38,7 @@ async def start_handler(message: Message, **kwargs):
     await message.answer(
         text=LOCALES["start"],
         parse_mode="HTML",
-        disable_web_page_preview=True
+        disable_web_page_preview=False
     )
 
     await bot.send_chat_action(
@@ -217,11 +217,13 @@ async def ad(message: Message, is_clb=False,**kwargs):
     user_id = message.chat.id if is_clb else message.from_user.id
     state = await ConfigDatabase.get_value('ad_state')
     text=f"""<b>📢Режим рассылки</b>  
- <b>all</b> — всем  
- <b>test</b> — только тебе  
- <b>admins</b> — админам  
- <b>off</b> — бот не реагирует
-  """
+<b>all</b> — всем  
+<b>test</b> — только тебе  
+<b>admins</b> — админам  
+<b>off</b> — бот не реагирует
+<b>blocked</b> — Только уже блокнутым
+<b>not_activated</b> — Только неактивированным
+<b>activated</b> — Только активированным"""
     ikb = user_keyboards.get_ad_kb(state)
     if is_clb:
         await message.edit_reply_markup(text=text,parse_mode="HTML", reply_markup=ikb)
@@ -405,11 +407,11 @@ async def ready_callback_handler(clb: CallbackQuery, **kwargs):
     # Random signal
     signals = [
         ("⬆️ UP for 2️⃣ minutes", await ConfigDatabase.get_value("photo4")),
-        # ("⬆️ UP for 3️⃣ minutes", await ConfigDatabase.get_value("photo4")),
-        # ("⬆️ UP for 4️⃣ minutes", await ConfigDatabase.get_value("photo4")),
-        # ("⬇️ DOWN for 2️⃣ minutes", await ConfigDatabase.get_value("photo5")),
-        # ("⬇️ DOWN for 3️⃣ minutes", await ConfigDatabase.get_value("photo5")),
-        # ("⬇️ DOWN for 4️⃣ minutes", await ConfigDatabase.get_value("photo5")),
+        ("⬆️ UP for 3️⃣ minutes", await ConfigDatabase.get_value("photo4")),
+        ("⬆️ UP for 4️⃣ minutes", await ConfigDatabase.get_value("photo4")),
+        ("⬇️ DOWN for 2️⃣ minutes", await ConfigDatabase.get_value("photo5")),
+        ("⬇️ DOWN for 3️⃣ minutes", await ConfigDatabase.get_value("photo5")),
+        ("⬇️ DOWN for 4️⃣ minutes", await ConfigDatabase.get_value("photo5")),
         (f"No safe entry point for <b>{pair_name}</b>.\nChoose another currency pair or try again a bit later", await ConfigDatabase.get_value("photo6"))
     ]
 
@@ -600,9 +602,10 @@ async def fallback_handler(message: Message, **kwargs):
                 await send_currency_pairs_message(user_id)
                 logger.info(f"Access activated for user {user_id} ({message.from_user.username}) with code: {text}")
             return
-
-    await message.answer(LOCALES["activate_access"], parse_mode="HTML")
-
+    if is_activated == 0:
+        await message.answer(LOCALES["activate_access"], parse_mode="HTML")
+    else:
+        await message.answer("Unrecognized text.\n\nUse /signals to get trading signals or <b>contact me</b> directly<b>\n@Raja_Personal_bot</b>", parse_mode="HTML")
 
 
 

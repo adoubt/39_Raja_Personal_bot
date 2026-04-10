@@ -10,7 +10,6 @@ from src.misc import (
     USER_MANAGEMENT_LOOP_INTERVAL_SECONDS,
 )
 
-
 async def ban_inactive_users():
     """Банит пользователей, которые неактивны более INACTIVE_BAN_THRESHOLD_SECONDS."""
     users = await UsersDatabase.get_all()
@@ -23,10 +22,11 @@ async def ban_inactive_users():
         is_banned = user[23]  # is_banned
         is_admin = user[10]  # is_admin
         last_activity_str = user[13]  # last_activity_at
-        is_activated = user[12]  # is_active
+        is_activated = user[11]  # is_activated
         if is_admin:
             continue
-
+        if not is_activated:
+            continue
         if not is_banned and last_activity_str:
             last_activity = datetime.fromisoformat(last_activity_str)
             if last_activity < threshold:

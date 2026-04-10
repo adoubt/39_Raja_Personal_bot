@@ -1,12 +1,26 @@
 LOCALES = {
-    "start": """Hello Trader👋 
+    "start": """<b>Hello Trader 👋</b>
 
-You are now connected to an AI-powered trading system built on <a href="https://theclutch.dev/news/20260405-40">TradingView</a> data, <a href="https://www.chaincatcher.com/en/article/2096143">Numerai</a> models, and a custom indicator that filters out market noise. 📊 
+You are now connected to an <b>AI-powered trading system</b> built on:
 
-The system analyzes volatility, trend strength, and entry zones to generate accurate signals. Follow each signal strictly and open trades exactly <b><u>10 seconds</u></b> after receiving it. If conditions are unfavorable, the system will advise you to wait or change the currency pair.
+• <a href="https://theclutch.dev/news/20260405-40"><u>TradingView</u></a>
+• <a href="https://www.chaincatcher.com/en/article/2096143"><u>Numerai</u></a>
+• <u>Custom indicator by Raj</u>
 
-Monthly performance typically ranges from 67% to 82% accuracy, and losing trades are normal and are already factored into the overall statistics 📊""",
+<b>❓ How it works:</b>
+The system analyzes <b>market volatility</b>, <b>trend strength</b>, and <b>entry zones</b> to generate high-accuracy signals.
 
+<b>🛠 Trading rules:</b>
+• Follow each signal strictly
+• Enter the trade within <b>10 seconds</b>
+• If conditions are not favorable, the system will tell you to wait or switch the currency pair.
+
+<b>📊 Performance:</b>
+Monthly accuracy: <b>67% – 82%</b>
+Losing trades are normal and already included in the overall statistics 
+
+
+<i>Powered by: <b>Raj AI • Neural System</b></i>""",
 
     "activate_access":"""🔑Each user receives a personal access key. Please message me directly to get yours and activate access.
 

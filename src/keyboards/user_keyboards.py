@@ -34,7 +34,7 @@ def get_admin_kb() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
 
 def get_ad_kb(state: str) -> InlineKeyboardMarkup:
-    states = ["off", "all", "test", "admins"]
+    states = ["off", "all", "test", "admins", "blocked", "not_activated", "activated"]
 
     keyboard = [
         [InlineKeyboardButton(text = f"{s}" if state != s else f"• {s} •", callback_data=f"set_state_{s}")]

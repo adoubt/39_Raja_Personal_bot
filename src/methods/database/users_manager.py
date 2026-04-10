@@ -246,3 +246,29 @@ class UsersDatabase:
                 (user_id,)
             )
             await db.commit()
+    @classmethod
+    async def get_blocked_users(cls):
+        async with aiosqlite.connect("src/databases/users.db") as db:
+            async with db.execute(f'SELECT * FROM users WHERE is_banned=1') as cursor:
+                result = await cursor.fetchall()
+                if not result:
+                    return []
+                return result
+
+    @classmethod
+    async def get_not_activated_users(cls):
+        async with aiosqlite.connect("src/databases/users.db") as db:
+            async with db.execute(f'SELECT * FROM users WHERE is_activated=0') as cursor:
+                result = await cursor.fetchall()
+                if not result:
+                    return []
+                return result
+
+    @classmethod
+    async def get_activated_users(cls):
+        async with aiosqlite.connect("src/databases/users.db") as db:
+            async with db.execute(f'SELECT * FROM users WHERE is_activated=1 and is_banned=0') as cursor:
+                result = await cursor.fetchall()
+                if not result:
+                    return []
+                return result

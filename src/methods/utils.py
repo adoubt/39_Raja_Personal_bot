@@ -5,7 +5,7 @@ from aiogram.filters import Filter
 from aiogram.types import Message, ContentType, InputMediaPhoto, InputMediaVideo, FSInputFile
 from aiogram import Bot
 from aiogram.enums import ChatAction
-
+from aiogram.exceptions import TelegramForbiddenError
 from src.methods.database.users_manager import UsersDatabase
 from src.methods.database.config_manager import ConfigDatabase
 from src.methods.database.ads_manager import AdsDatabase
@@ -202,11 +202,14 @@ async def handle_send_ad(content, admin: int):
     users = {
         "all": await UsersDatabase.get_all(),
         "test": [[admin]],
-        "admins": await UsersDatabase.get_all_admins()
+        "admins": await UsersDatabase.get_all_admins(),
+        "blocked": await UsersDatabase.get_blocked_users(),
+        "not_activated": await UsersDatabase.get_not_activated_users(),
+        "activated": await UsersDatabase.get_activated_users()
     }.get(state, [])
 
     sent_count = 0
-
+    blocked_times = 0   
     for user in users:
         if await UsersDatabase.is_banned(user[0]):
             continue
@@ -214,18 +217,21 @@ async def handle_send_ad(content, admin: int):
             msg_ids = await send_ad_message(user[0], content)
 
             if not msg_ids:
+                blocked_times += 1
                 continue
 
             sent_count += 1
 
-            # --- сохранение ---
             if isinstance(msg_ids, list):
                 await AdsDatabase.add_many(ad_id, user[0], msg_ids)
             else:
                 await AdsDatabase.add(ad_id, user[0], msg_ids)
 
-        except Exception:
-            pass
+            
+
+        except Exception as e:
+            # все остальные ошибки
+            logger.error(f"Error while sending to {user[0]}: {e}")
 
         await asyncio.sleep(0.04)
 
@@ -233,15 +239,20 @@ async def handle_send_ad(content, admin: int):
 
     msg = (
         f"📢 Messages sent: <b>{sent_count}</b>\n"
+        f"Errors: <code>{blocked_times}</code>\n"
         f"Sender: @{admin_name} {admin}\n"
         f"state: <b>{state}</b>\n"
         f"ad_id: <code>{ad_id}</code>"
         "Чтобы удалить рассылку используй /redakt_post"
     )
-    message.answer(msg)
+    admins = await UsersDatabase.get_all_admins()
+    for a in admins:
+        try:
+            await bot.send_message(a[0], msg, parse_mode="HTML")
+        except Exception:
+            pass
 
     logger.success(msg)
-
 
 async def init_content_handler(message: Message):
     for key, path in PHOTO_PATHS.items():
