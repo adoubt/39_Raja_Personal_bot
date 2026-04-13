@@ -16,7 +16,7 @@ The system analyzes <b>market volatility</b>, <b>trend strength</b>, and <b>entr
 • If conditions are not favorable, the system will tell you to wait or switch the currency pair.
 
 <b>📊 Performance:</b>
-Monthly accuracy: <b>67% – 82%</b>
+Monthly accuracy: <b>76% – 91%</b>
 Losing trades are normal and already included in the overall statistics 
 
 
