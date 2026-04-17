@@ -446,7 +446,7 @@ async def ready_callback_handler(clb: CallbackQuery, **kwargs):
         parse_mode="HTML"
     )
 
-    await asyncio.sleep(10)
+    await asyncio.sleep(13)
 
     await clb.bot.send_message(
         clb.from_user.id,
